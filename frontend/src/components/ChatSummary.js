@@ -11,8 +11,9 @@ const fetchYouTubeVideos = async (queries) => {
   let videos = [];
   for (const query of queries) {
     if (!query.trim()) continue;
-    // query="metnal health suggestion for "+query;
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}`;
+    // Add mental health context to the search query
+    const mentalHealthQuery = `mental health tips for ${query}`;
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(mentalHealthQuery)}&key=${YOUTUBE_API_KEY}`;
     const res = await fetch(url);
     const data = await res.json();
     if (data.items && data.items.length > 0) {

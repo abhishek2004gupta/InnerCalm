@@ -24,7 +24,7 @@ CORS(app)
 
 # Load data
 stemmer = LancasterStemmer()
-with open('dataset.json') as file:
+with open('/data/dataset.json') as file:
     intents = json.load(file)
 
 model = load_model('chatbot_model.keras')
