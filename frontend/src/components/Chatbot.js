@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { voiceService } from '../services/voiceService';
+import ConversationPopup from './ConversationPopup';
 import '../styles/Chatbot.css';
 
 const CHAT_STORAGE_KEY = 'chatbotMessages';
@@ -21,6 +22,7 @@ const Chatbot = () => {
   const [showSummary, setShowSummary] = useState(false);
   const [chatSummary, setChatSummary] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isConversationOpen, setIsConversationOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const chatMessagesRef = useRef(null);
   const navigate = useNavigate();
@@ -101,6 +103,10 @@ const Chatbot = () => {
       }
     );
     setIsListening(true);
+  };
+
+  const handleConversationMessage = (message) => {
+    setMessages(prev => [...prev, message]);
   };
 
   const handleEndChat = async () => {
@@ -191,6 +197,14 @@ const Chatbot = () => {
               <i className="fas fa-microphone"></i>
             </button>
             <button 
+              className="conversation-btn"
+              onClick={() => setIsConversationOpen(true)}
+              type="button"
+              title="Start voice conversation"
+            >
+              <i className="fas fa-comments"></i>
+            </button>
+            <button 
               className="send-btn" 
               type="submit"
               disabled={!input.trim()}
@@ -223,6 +237,12 @@ const Chatbot = () => {
           </div>
         </div>
       </div>
+
+      <ConversationPopup 
+        isOpen={isConversationOpen}
+        onClose={() => setIsConversationOpen(false)}
+        onMessage={handleConversationMessage}
+      />
     </div>
   );
 };
