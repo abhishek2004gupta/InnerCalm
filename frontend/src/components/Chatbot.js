@@ -100,7 +100,7 @@ const Chatbot = () => {
       (error) => {
         console.error('Voice recognition error:', error);
         setIsListening(false);
-      }
+    }
     );
     setIsListening(true);
   };

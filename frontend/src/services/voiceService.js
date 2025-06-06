@@ -2,6 +2,7 @@ class VoiceService {
   constructor() {
     this.recognition = null;
     this.isListening = false;
+    this.synthesis = window.speechSynthesis;
   }
 
   init() {
@@ -10,7 +11,7 @@ class VoiceService {
     }
 
     this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    this.recognition.continuous = false;
+    this.recognition.continuous = true;
     this.recognition.interimResults = false;
     this.recognition.lang = 'en-US';
   }
@@ -25,7 +26,7 @@ class VoiceService {
     };
 
     this.recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
+      const transcript = event.results[event.results.length - 1][0].transcript;
       onResult(transcript);
     };
 
@@ -35,7 +36,9 @@ class VoiceService {
     };
 
     this.recognition.onend = () => {
-      this.isListening = false;
+      if (this.isListening) {
+        this.recognition.start();
+      }
     };
 
     this.recognition.start();
@@ -43,8 +46,16 @@ class VoiceService {
 
   stopListening() {
     if (this.recognition) {
-      this.recognition.stop();
       this.isListening = false;
+      this.recognition.stop();
+    }
+  }
+
+  speak(text) {
+    if (this.synthesis) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      this.synthesis.speak(utterance);
     }
   }
 }

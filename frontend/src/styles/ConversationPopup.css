@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,30 +12,33 @@
 }
 
 .conversation-popup {
-  background: #1e1e1e;
-  border-radius: 12px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
   width: 90%;
-  max-width: 800px;
-  height: 80vh;
+  max-width: 600px;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .conversation-header {
-  background: #2d2d2d;
-  padding: 1rem;
-  border-radius: 12px 12px 0 0;
+  padding: 16px;
+  border-bottom: 1px solid #333;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #3d3d3d;
 }
 
 .conversation-header h3 {
-  color: #fff;
   margin: 0;
+  color: #fff;
   font-size: 1.2rem;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 .close-btn {
@@ -44,98 +47,99 @@
   color: #fff;
   cursor: pointer;
   font-size: 1.2rem;
-  padding: 0.5rem;
-  transition: color 0.3s ease;
-}
-
-.close-btn:hover {
-  color: #ff4444;
-}
-
-.conversation-terminal {
-  flex-grow: 1;
-  padding: 1rem;
-  overflow-y: auto;
-  font-family: 'Courier New', monospace;
-  color: #fff;
-  background: #1e1e1e;
-}
-
-.terminal-line {
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  line-height: 1.4;
-}
-
-.terminal-prompt {
-  color: #4CAF50;
-  font-weight: bold;
-  min-width: 40px;
-}
-
-.terminal-text {
-  flex-grow: 1;
-  word-break: break-word;
-}
-
-.terminal-timestamp {
-  color: #666;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.user-line .terminal-prompt {
-  color: #2196F3;
-}
-
-.bot-line .terminal-prompt {
-  color: #FF9800;
-}
-
-.conversation-controls {
-  padding: 1rem;
-  background: #2d2d2d;
-  border-radius: 0 0 12px 12px;
-  display: flex;
-  justify-content: center;
-  border-top: 1px solid #3d3d3d;
-}
-
-.conversation-controls .voice-btn {
-  background: #4CAF50;
-  color: white;
-  border: none;
-  padding: 1rem;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.conversation-controls .voice-btn:hover {
-  transform: scale(1.1);
-  background: #45a049;
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ff4444;
 }
 
-.conversation-controls .voice-btn.listening {
-  background: #f44336;
-  animation: pulse 1.5s infinite;
+.conversation-terminal {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  background-color: #000;
+  border-radius: 4px;
+  margin: 16px;
+  max-height: 400px;
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+.terminal-line {
+  margin: 4px 0;
+  display: flex;
+  align-items: flex-start;
+  color: #fff;
+}
+
+.terminal-prompt {
+  color: #0f0;
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+.terminal-text {
+  flex: 1;
+  word-break: break-word;
+}
+
+.terminal-timestamp {
+  color: #666;
+  font-size: 0.8rem;
+  margin-left: 8px;
+}
+
+.user-line .terminal-prompt {
+  color: #0ff;
+}
+
+.bot-line .terminal-prompt {
+  color: #f0f;
+}
+
+.conversation-controls {
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.start-btn, .end-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.start-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.start-btn:hover {
+  background-color: #45a049;
+}
+
+.end-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.end-btn:hover {
+  background-color: #da190b;
+}
+
+.start-btn i, .end-btn i {
+  font-size: 1.1rem;
 } 

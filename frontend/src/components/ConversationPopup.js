@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { voiceService } from '../services/voiceService';
 import '../styles/ConversationPopup.css';
 
+const PYTHON_BACKEND_URL = process.env.REACT_APP_PYTHON_BACKEND_URL || 'http://localhost:5001';
+
 const ConversationPopup = ({ isOpen, onClose, onMessage }) => {
   const [conversation, setConversation] = useState([]);
-  const [isListening, setIsListening] = useState(false);
+  const [isActive, setIsActive] = useState(false);
   const conversationEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -17,6 +19,22 @@ const ConversationPopup = ({ isOpen, onClose, onMessage }) => {
     scrollToBottom();
   }, [conversation]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      stopConversation();
+    }
+  }, [isOpen]);
+
+  const startConversation = () => {
+    setIsActive(true);
+    handleVoiceInput();
+  };
+
+  const stopConversation = () => {
+    setIsActive(false);
+    voiceService.stopListening();
+  };
+
   const handleVoiceInput = () => {
     voiceService.startListening(
       async (transcript) => {
@@ -28,14 +46,17 @@ const ConversationPopup = ({ isOpen, onClose, onMessage }) => {
         
         setConversation(prev => [...prev, userMessage]);
         onMessage(userMessage);
-        setIsListening(false);
 
         try {
-          const response = await fetch(`${process.env.REACT_APP_PYTHON_BACKEND_URL}/api/chat`, {
+          const response = await fetch(`${PYTHON_BACKEND_URL}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: transcript }),
           });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
 
           const data = await response.json();
           
@@ -47,6 +68,7 @@ const ConversationPopup = ({ isOpen, onClose, onMessage }) => {
           
           setConversation(prev => [...prev, botMessage]);
           onMessage(botMessage);
+          voiceService.speak(botMessage.text);
         } catch (error) {
           console.error('Error:', error);
           const errorMessage = {
@@ -56,14 +78,16 @@ const ConversationPopup = ({ isOpen, onClose, onMessage }) => {
           };
           setConversation(prev => [...prev, errorMessage]);
           onMessage(errorMessage);
+          voiceService.speak(errorMessage.text);
         }
       },
       (error) => {
         console.error('Voice recognition error:', error);
-        setIsListening(false);
+        if (isActive) {
+          handleVoiceInput();
+        }
       }
     );
-    setIsListening(true);
   };
 
   if (!isOpen) return null;
@@ -73,9 +97,11 @@ const ConversationPopup = ({ isOpen, onClose, onMessage }) => {
       <div className="conversation-popup">
         <div className="conversation-header">
           <h3>Voice Conversation</h3>
-          <button className="close-btn" onClick={onClose}>
-            <i className="fas fa-times"></i>
-          </button>
+          <div className="header-buttons">
+            <button className="close-btn" onClick={onClose} title="Close conversation">
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
         </div>
         
         <div className="conversation-terminal">
@@ -90,13 +116,23 @@ const ConversationPopup = ({ isOpen, onClose, onMessage }) => {
         </div>
 
         <div className="conversation-controls">
-          <button 
-            className={`voice-btn ${isListening ? 'listening' : ''}`} 
-            onClick={handleVoiceInput}
-            title={isListening ? 'Listening...' : 'Start voice input'}
-          >
-            <i className="fas fa-microphone"></i>
-          </button>
+          {!isActive ? (
+            <button 
+              className="start-btn"
+              onClick={startConversation}
+              title="Start conversation"
+            >
+              <i className="fas fa-play"></i> Start
+            </button>
+          ) : (
+            <button 
+              className="end-btn"
+              onClick={stopConversation}
+              title="End conversation"
+            >
+              <i className="fas fa-stop"></i> End
+            </button>
+          )}
         </div>
       </div>
     </div>
