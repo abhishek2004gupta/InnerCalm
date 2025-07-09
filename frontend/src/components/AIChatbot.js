@@ -85,7 +85,10 @@ const AIChatbot = () => {
   return (
     <div className="chatbot-container">
       <div className="chat-header">
-        <h1>AI Mental Health Assistant</h1>
+        <h1>
+          <img src="/images/chatbot_conver.png" alt="Chatbot" className="chatbot-icon" />
+          AI Mental Health Assistant
+        </h1>
         <p>Available 24/7 for support and guidance</p>
       </div>
 
@@ -110,12 +113,14 @@ const AIChatbot = () => {
               className={`voice-button ${isRecording ? 'recording' : ''}`}
               onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
             >
+              <img src="/images/chatbot_voice.png" alt="Voice" className="voice-icon" />
               {isRecording ? 'Stop Recording' : 'Voice Input'}
             </button>
             <button
               className={`listen-button ${isListening ? 'listening' : ''}`}
               onClick={isListening ? stopListening : startListening}
             >
+              <img src="/images/chatbot_conver.png" alt="Conversation" className="conversation-icon" />
               {isListening ? 'Stop Listening' : 'Listen'}
             </button>
           </div>
@@ -128,7 +133,10 @@ const AIChatbot = () => {
               placeholder="Type your message..."
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(input)}
             />
-            <button onClick={() => handleSendMessage(input)}>Send</button>
+            <button onClick={() => handleSendMessage(input)}>
+              <img src="/images/send_message.png" alt="Send" className="send-icon" />
+              Send
+            </button>
           </div>
         </div>
       </div>

@@ -153,6 +153,17 @@
   background: #1a252f;
 }
 
+.chatbot-icon, .voice-icon, .conversation-icon, .send-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f1f1f1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
 @media (max-width: 768px) {
   .chatbot-container {
     padding: 1rem;

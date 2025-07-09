@@ -11,16 +11,16 @@ const Footer = () => {
           <p>Your journey to mental wellness starts here. We provide professional therapy services to help you achieve inner peace and personal growth.</p>
           <div className="social-links">
             <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-link">
-              <img src="/images/facebook.svg" alt="Facebook" />
+              <img src="/images/facebook.jpeg" alt="Facebook" />
             </a>
             <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="social-link">
-              <img src="/images/twitter.svg" alt="Twitter" />
+              <img src="/images/twitter.png" alt="Twitter" />
             </a>
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-link">
-              <img src="/images/instagram.svg" alt="Instagram" />
+              <img src="/images/instagram.jpg" alt="Instagram" />
             </a>
             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-link">
-              <img src="/images/linkedin.svg" alt="LinkedIn" />
+              <img src="/images/linkedin.png" alt="LinkedIn" />
             </a>
           </div>
         </div>

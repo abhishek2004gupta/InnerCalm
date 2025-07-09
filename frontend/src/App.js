@@ -17,6 +17,8 @@ import Login from './components/Login';
 import Register from './components/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './components/Profile';
+import TherapistDashboard from './components/TherapistDashboard';
+import AdminScheduleMeeting from './components/AdminScheduleMeeting';
 import './styles/App.css';
 
 function App() {
@@ -64,6 +66,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/therapist-dashboard" element={<TherapistDashboard />} />
+            <Route path="/admin/schedule-meeting" element={<AdminScheduleMeeting />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

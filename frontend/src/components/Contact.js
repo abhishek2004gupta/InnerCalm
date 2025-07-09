@@ -25,7 +25,7 @@ const Contact = () => {
     setMessageStatus({ text: 'Sending message...', type: 'pending' });
 
     try {
-      const response = await fetch('https://formsubmit.co/abhishekg272004@gmail.com', {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || ''}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ const Contact = () => {
         </div>
 
         <div className="contact-form-container">
-          <form action="https://formsubmit.co/abhishekg272004@gmail.com" method="POST" className="contact-form">
+          <form className="contact-form" onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="name">Full Name *</label>
@@ -195,17 +195,11 @@ const Contact = () => {
               <p>For emergencies, please call our emergency line directly.</p>
             </div>
 
-            <button type="submit" className="submit-btn" onClick={handleSubmit}>
+            <button type="submit" className="submit-btn">
               Send Message
             </button>
             {messageStatus.text && (
-              <div style={{ 
-                marginTop: '10px', 
-                color: messageStatus.type === 'success' ? 'green' : 
-                       messageStatus.type === 'error' ? 'red' : 'black'
-              }}>
-                {messageStatus.text}
-              </div>
+              <div className={`contact-message-status ${messageStatus.type}`}>{messageStatus.text}</div>
             )}
           </form>
         </div>

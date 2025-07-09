@@ -81,6 +81,35 @@ CREATE TABLE user_preferences (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Add coins and meeting_link to users table
+ALTER TABLE users ADD COLUMN coins INTEGER DEFAULT 100;
+ALTER TABLE users ADD COLUMN meeting_link TEXT;
+
+-- Therapists table
+CREATE TABLE therapists (
+    therapist_id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN DEFAULT true
+);
+
+-- Therapist meetings table
+CREATE TABLE therapist_meetings (
+    meeting_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    therapist_id INTEGER REFERENCES therapists(therapist_id),
+    meeting_link TEXT NOT NULL,
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITH TIME ZONE,
+    status VARCHAR(20) DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'completed', 'cancelled')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better query performance
 CREATE INDEX idx_chat_sessions_user_id ON chat_sessions(user_id);
 CREATE INDEX idx_chat_messages_session_id ON chat_messages(session_id);

@@ -254,7 +254,8 @@ except Exception as e:
 
 # NLP Helper Functions
 def clean_up_sentence(sentence):
-    sentence_words = nltk.word_tokenize(sentence)
+    # sentence_words = nltk.word_tokenize(sentence)
+    sentence_words = sentence.split()
     return [stemmer.stem(word.lower()) for word in sentence_words]
 
 def bow(sentence, words):
@@ -349,9 +350,9 @@ Conversation:
 
 # ✅ Run Flask App on Port 5001
 if __name__ == '__main__':
-    try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        nltk.download('punkt')
+    # try:
+    #     nltk.data.find('tokenizers/punkt')
+    # except LookupError:
+    #     nltk.download('punkt')
 
     app.run(debug=True, port=5001)

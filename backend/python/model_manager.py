@@ -6,6 +6,11 @@ import random
 import logging
 from pathlib import Path
 from tensorflow import keras
+# import nltk
+# try:
+#     nltk.data.find('tokenizers/punkt')
+# except LookupError:
+#     nltk.download('punkt')
 
 class ModelManager:
     def __init__(self):
@@ -70,10 +75,11 @@ class ModelManager:
             self.load_intents()
 
     def clean_up_sentence(self, sentence):
-        import nltk
+        # import nltk
         from nltk.stem.lancaster import LancasterStemmer
         stemmer = LancasterStemmer()
-        sentence_words = nltk.word_tokenize(sentence)
+        # sentence_words = nltk.word_tokenize(sentence)
+        sentence_words = sentence.split()
         sentence_words = [stemmer.stem(word.lower()) for word in sentence_words]
         return sentence_words
 

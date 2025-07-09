@@ -18,7 +18,7 @@ const About = () => {
             <p>At Inner Calm, we believe in making mental health support accessible, compassionate, and effective. Our mission is to empower individuals to achieve emotional well-being through professional therapy services and a supportive community.</p>
           </div>
           <div className="mission-image">
-            <img src="/images/mission.jpg" alt="Our Mission" />
+            <img src="/images/mission.png" alt="Our Mission" />
           </div>
         </section>
 
@@ -52,13 +52,13 @@ const About = () => {
           <h2>Our Expert Team</h2>
           <div className="team-grid">
             <div className="team-card">
-              <img src="/images/therapist1.jpg" alt="Dr. Sarah Johnson" />
+              <img src="/images/therapist1.jpeg" alt="Dr. Sarah Johnson" />
               <h3>Dr. Sarah Johnson</h3>
               <p className="role">Clinical Director</p>
               <p className="bio">With over 15 years of experience in clinical psychology, Dr. Johnson leads our team with expertise and compassion.</p>
             </div>
             <div className="team-card">
-              <img src="/images/therapist2.jpg" alt="Michael Chen" />
+              <img src="/images/therapist2.jpeg" alt="Michael Chen" />
               <h3>Michael Chen</h3>
               <p className="role">Senior Therapist</p>
               <p className="bio">Specializing in cognitive behavioral therapy, Michael brings innovative approaches to mental health care.</p>

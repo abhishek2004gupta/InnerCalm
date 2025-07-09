@@ -99,7 +99,7 @@ const ConversationPopup = ({ isOpen, onClose, onMessage }) => {
           <h3>Voice Conversation</h3>
           <div className="header-buttons">
             <button className="close-btn" onClick={onClose} title="Close conversation">
-              <i className="fas fa-times"></i>
+              <img src="/images/close_chat.png" alt="Close" className="close-chat-icon" />
             </button>
           </div>
         </div>

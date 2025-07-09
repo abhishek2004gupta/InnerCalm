@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000/api';
 
 // Event emitter for auth state changes
 const authStateChangeListeners = new Set();

@@ -1,3 +1,6 @@
+// Add this at the top of the file
+// NOTE: To change backend URL, set REACT_APP_BACKEND_URL in your .env and rebuild the frontend.
+// For plain JS, you may need to set window.REACT_APP_BACKEND_URL manually before including this script if not using React.
 const images = document.querySelectorAll('.lazy-load');
 const observer = new IntersectionObserver((entries, observer) => {
   entries.forEach(entry => {
@@ -133,11 +136,12 @@ function startAiBotInteraction() {
 //         .catch((error) => console.error("Error:", error));
 // });
 // Text Interaction
+const BACKEND_URL = window.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 document.getElementById("shareButton").addEventListener("click", async () => {
     const userMessage = document.getElementById("userInput").value;
 
     if (userMessage.trim()) {
-        const response = await fetch("http://localhost:5000/chat", {
+        const response = await fetch(`${BACKEND_URL}/chat`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

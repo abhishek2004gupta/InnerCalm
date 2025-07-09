@@ -4,127 +4,76 @@ import { getUserProfile, updateUserProfile } from '../services/authService';
 import '../styles/Profile.css';
 
 const Profile = () => {
-    const [profile, setProfile] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        username: ''
-    });
-    const [isEditing, setIsEditing] = useState(false);
+    const [dashboard, setDashboard] = useState(null);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
-        loadProfile();
+        const fetchDashboard = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || ''}/api/auth/dashboard`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) setDashboard(data);
+                else setError(data.error || 'Failed to load dashboard');
+            } catch (e) {
+                setError('Failed to load dashboard');
+            }
+        };
+        fetchDashboard();
     }, []);
 
-    const loadProfile = async () => {
-        try {
-            const data = await getUserProfile();
-            setProfile(data);
-        } catch (error) {
-            setError('Failed to load profile');
-        }
-    };
-
-    const handleChange = (e) => {
-        setProfile({
-            ...profile,
-            [e.target.name]: e.target.value
-        });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setSuccess('');
-        try {
-            await updateUserProfile(profile);
-            setSuccess('Profile updated successfully');
-            setIsEditing(false);
-        } catch (error) {
-            setError('Failed to update profile');
-        }
-    };
-
+    if (error) return <div className="profile-error">{error}</div>;
+    if (!dashboard) return <div>Loading...</div>;
+    const { user, meetings } = dashboard;
     return (
         <div className="profile-page">
             <div className="profile-card">
                 <div className="profile-header">
-                    <div className="profile-avatar-lg">{profile.firstName?.[0] || 'U'}</div>
+                    <div className="profile-avatar-lg">{user.first_name?.[0] || 'U'}</div>
                     <div>
-                        <h2>{profile.firstName} {profile.lastName}</h2>
-                        <p className="profile-username">@{profile.username}</p>
+                        <h2>{user.first_name} {user.last_name}</h2>
+                        <p className="profile-username">@{user.username}</p>
+                        <div>Coins: <b>{user.coins}</b></div>
                     </div>
                 </div>
                 <hr className="profile-divider" />
-                {!isEditing ? (
                     <div className="profile-info-section">
-                        <h3>Profile Information</h3>
-                        <div className="profile-info-row"><span>Email:</span> <span>{profile.email}</span></div>
-                        <div className="profile-info-row"><span>First Name:</span> <span>{profile.firstName}</span></div>
-                        <div className="profile-info-row"><span>Last Name:</span> <span>{profile.lastName}</span></div>
-                        <div className="profile-info-row"><span>Username:</span> <span>{profile.username}</span></div>
-                        <button className="profile-edit-btn" onClick={() => setIsEditing(true)}>Edit Profile</button>
-                        {success && <div className="profile-success">{success}</div>}
-                        {error && <div className="profile-error">{error}</div>}
+                    <h3>Meeting Link</h3>
+                    <div className="profile-info-row">
+                        <span>Meeting Link:</span>
+                        <a href={user.meeting_link} target="_blank" rel="noopener noreferrer">Join Meeting</a>
                     </div>
-                ) : (
-                    <form className="profile-edit-form" onSubmit={handleSubmit}>
-                        <h3>Edit Profile</h3>
-                        <div className="profile-form-group">
-                            <label htmlFor="firstName">First Name</label>
-                            <input
-                                type="text"
-                                id="firstName"
-                                name="firstName"
-                                value={profile.firstName}
-                                onChange={handleChange}
-                                required
-                            />
                         </div>
-                        <div className="profile-form-group">
-                            <label htmlFor="lastName">Last Name</label>
-                            <input
-                                type="text"
-                                id="lastName"
-                                name="lastName"
-                                value={profile.lastName}
-                                onChange={handleChange}
-                                required
-                            />
+                <div className="profile-info-section">
+                    <h3>Therapist Sessions</h3>
+                    {meetings.length === 0 ? <div>No sessions scheduled.</div> : (
+                        <table className="profile-meetings-table">
+                            <thead>
+                                <tr>
+                                    <th>Therapist</th>
+                                    <th>Status</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Link</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {meetings.map(m => (
+                                    <tr key={m.meeting_id}>
+                                        <td>{m.therapist_username} ({m.therapist_email})</td>
+                                        <td>{m.status}</td>
+                                        <td>{m.start_time ? new Date(m.start_time).toLocaleString() : '-'}</td>
+                                        <td>{m.end_time ? new Date(m.end_time).toLocaleString() : '-'}</td>
+                                        <td><a href={m.meeting_link} target="_blank" rel="noopener noreferrer">Join</a></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                         </div>
-                        <div className="profile-form-group">
-                            <label htmlFor="email">Email</label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                value={profile.email}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                        <div className="profile-form-group">
-                            <label htmlFor="username">Username</label>
-                            <input
-                                type="text"
-                                id="username"
-                                name="username"
-                                value={profile.username}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                        <div className="profile-edit-actions">
-                            <button type="submit" className="profile-save-btn">Save</button>
-                            <button type="button" className="profile-cancel-btn" onClick={() => setIsEditing(false)}>Cancel</button>
-                        </div>
-                        {success && <div className="profile-success">{success}</div>}
-                        {error && <div className="profile-error">{error}</div>}
-                    </form>
-                )}
             </div>
         </div>
     );

@@ -190,11 +190,28 @@ const Chatbot = () => {
             />
             <button 
               className={`voice-btn ${isListening ? 'listening' : ''}`} 
-              onClick={handleVoiceInput}
+              onClick={() => {
+                if (isListening) {
+                  voiceService.stopListening();
+                  setIsListening(false);
+                } else {
+                  voiceService.startListening(
+                    (transcript) => {
+                      setInput(transcript);
+                      setIsListening(false);
+                    },
+                    (error) => {
+                      console.error('Voice recognition error:', error);
+                      setIsListening(false);
+                    }
+                  );
+                  setIsListening(true);
+                }
+              }}
               type="button"
-              title={isListening ? 'Listening...' : 'Start voice input'}
+              title={isListening ? 'Stop Listening' : 'Start voice input'}
             >
-              <i className="fas fa-microphone"></i>
+              <img src="/images/chatbot_voice.png" alt="Voice" className="voice-icon" />
             </button>
             <button 
               className="conversation-btn"
@@ -202,7 +219,7 @@ const Chatbot = () => {
               type="button"
               title="Start voice conversation"
             >
-              <i className="fas fa-comments"></i>
+              <img src="/images/chatbot_conver.png" alt="Conversation" className="conversation-icon" />
             </button>
             <button 
               className="send-btn" 
@@ -210,7 +227,7 @@ const Chatbot = () => {
               disabled={!input.trim()}
               title="Send message"
             >
-              <i className="fas fa-paper-plane"></i>
+              <img src="/images/send_message.png" alt="Send" className="send-icon" />
             </button>
           </form>
         </div>

@@ -3,6 +3,43 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
+const { google } = require('googleapis');
+
+// Helper to create a Google Meet link via Calendar API
+async function createGoogleMeetLink(email) {
+    try {
+        const oAuth2Client = new google.auth.OAuth2(
+            process.env.GOOGLE_MEET_CLIENT_ID,
+            process.env.GOOGLE_MEET_CLIENT_SECRET,
+            process.env.GOOGLE_MEET_REDIRECT_URI
+        );
+        // For demo: use a stored refresh token or prompt for consent (production: use a service account or user consent flow)
+        // You must obtain a refresh token for a Google account with Calendar access and set it in .env as GOOGLE_MEET_REFRESH_TOKEN
+        if (process.env.GOOGLE_MEET_REFRESH_TOKEN) {
+            oAuth2Client.setCredentials({ refresh_token: process.env.GOOGLE_MEET_REFRESH_TOKEN });
+        } else {
+            throw new Error('No Google refresh token set. Set GOOGLE_MEET_REFRESH_TOKEN in .env.');
+        }
+        const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
+        const event = {
+            summary: 'Therapy Session',
+            description: 'Scheduled via InnerCalm',
+            start: { dateTime: new Date(Date.now() + 5 * 60000).toISOString() }, // 5 min from now
+            end: { dateTime: new Date(Date.now() + 35 * 60000).toISOString() }, // 35 min from now
+            attendees: [{ email }],
+            conferenceData: { createRequest: { requestId: Math.random().toString(36).substring(2, 15) } },
+        };
+        const response = await calendar.events.insert({
+            calendarId: 'primary',
+            resource: event,
+            conferenceDataVersion: 1,
+        });
+        return response.data.hangoutLink || null;
+    } catch (err) {
+        console.error('Google Meet link generation failed:', err.message);
+        return null;
+    }
+}
 
 // Register
 router.post('/register', async (req, res) => {
@@ -31,10 +68,16 @@ router.post('/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create user
+        // Generate real Google Meet link
+        let meetingLink = await createGoogleMeetLink(email);
+        if (!meetingLink) {
+            meetingLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 9)}`;
+        }
+
+        // Create user with coins and meeting_link
         const result = await db.query(
-            'INSERT INTO users (username, email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, username, email',
-            [username, email, hashedPassword, firstName, lastName]
+            'INSERT INTO users (username, email, password_hash, first_name, last_name, coins, meeting_link) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING user_id, username, email, coins, meeting_link',
+            [username, email, hashedPassword, firstName, lastName, 100, meetingLink]
         );
 
         // Generate token
@@ -50,7 +93,9 @@ router.post('/register', async (req, res) => {
             user: {
                 id: result.rows[0].user_id,
                 username: result.rows[0].username,
-                email: result.rows[0].email
+                email: result.rows[0].email,
+                coins: result.rows[0].coins,
+                meeting_link: result.rows[0].meeting_link
             }
         });
     } catch (error) {
@@ -153,6 +198,65 @@ router.get('/profile', async (req, res) => {
         }
         res.status(500).json({ error: 'Server error while fetching profile' });
     }
+});
+
+// User Dashboard: Get meeting link and all sessions
+router.get('/dashboard', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Get user info
+        const userResult = await db.query('SELECT user_id, username, email, coins, meeting_link FROM users WHERE user_id = $1', [decoded.userId]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        // Get all meetings for this user
+        const meetingsResult = await db.query(
+            `SELECT tm.meeting_id, tm.therapist_id, t.username AS therapist_username, t.email AS therapist_email, tm.meeting_link, tm.start_time, tm.end_time, tm.status
+             FROM therapist_meetings tm
+             JOIN therapists t ON tm.therapist_id = t.therapist_id
+             WHERE tm.user_id = $1
+             ORDER BY tm.start_time DESC`,
+            [decoded.userId]
+        );
+        res.json({
+            user: userResult.rows[0],
+            meetings: meetingsResult.rows
+        });
+    } catch (error) {
+        console.error('User dashboard error:', error);
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expired' });
+        }
+        res.status(500).json({ error: 'Server error while fetching dashboard' });
+    }
+});
+
+// Google OAuth2 callback to get refresh token
+router.get('/google/callback', async (req, res) => {
+  const code = req.query.code;
+  if (!code) {
+    return res.status(400).send('No code provided');
+  }
+  const oAuth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_MEET_CLIENT_ID,
+    process.env.GOOGLE_MEET_CLIENT_SECRET,
+    process.env.GOOGLE_MEET_REDIRECT_URI
+  );
+  try {
+    const { tokens } = await oAuth2Client.getToken(code);
+    console.log('Your refresh token is:', tokens.refresh_token);
+    res.send('Refresh token received! Check your server logs and add it to your .env as GOOGLE_MEET_REFRESH_TOKEN.');
+  } catch (err) {
+    console.error('Error exchanging code for token:', err);
+    res.status(500).send('Failed to get tokens');
+  }
 });
 
 module.exports = router; 

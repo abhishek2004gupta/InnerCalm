@@ -67,6 +67,12 @@ const Header = () => {
           <span className="logo-icon">🧠</span>
           <span className="logo-text">Inner Calm</span>
         </Link>
+        {isLoggedIn && user && (
+          <div className="header-coins-bar">
+            <img src="/images/coin.png" alt="Coins" className="coin-logo" />
+            <span className="coin-count">{user.coins}</span>
+          </div>
+        )}
 
         <button 
           className={`mobile-menu-btn ${isMobileMenuOpen ? 'open' : ''}`}
