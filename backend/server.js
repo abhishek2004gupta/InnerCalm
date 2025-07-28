@@ -6,6 +6,7 @@ const chatRoutes = require('./routes/chat');
 const summaryRoutes = require('./routes/summary');
 const therapistRoutes = require('./routes/therapist');
 const contactRoutes = require('./routes/contact');
+const therapyRoutes = require('./routes/therapy');
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +39,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/summary', summaryRoutes);
 app.use('/api/therapist', therapistRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/therapy', therapyRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

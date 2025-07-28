@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateChatSummary, generateSuggestions } from '../services/geminiService';
+import { saveChatSummary } from '../services/chatService';
 import '../styles/ChatSummary.css';
 import { jsPDF } from 'jspdf';
 
@@ -55,6 +56,16 @@ const ChatSummary = () => {
           try {
             const enhancedSummary = await generateChatSummary(parsed.messages);
             const suggestions = await generateSuggestions(parsed.messages);
+            
+            // Save complete summary to database
+            try {
+              // Create a temporary session ID for this summary
+              const tempSessionId = Date.now().toString();
+              await saveChatSummary(tempSessionId, enhancedSummary, suggestions);
+            } catch (dbError) {
+              console.error('Failed to save summary to database:', dbError);
+            }
+            
             const updated = {
               ...parsed,
               summary: {

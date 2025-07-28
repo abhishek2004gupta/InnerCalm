@@ -131,3 +131,47 @@ CREATE TRIGGER update_user_preferences_updated_at
     BEFORE UPDATE ON user_preferences
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column(); 
+
+
+-- schema for the meetings table --
+CREATE TABLE individual_therapy_sessions (
+    session_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    age INTEGER,
+    occupation VARCHAR(100),
+    main_concerns TEXT,
+    goals TEXT,
+    emergency_contact VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE couples_therapy_sessions (
+    session_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    partner1_name VARCHAR(100) NOT NULL,
+    partner2_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    relationship_duration VARCHAR(50),
+    main_concerns TEXT,
+    goals TEXT,
+    emergency_contact VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE family_therapy_sessions (
+    session_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    family_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    family_size VARCHAR(10),
+    children_ages VARCHAR(100),
+    main_concerns TEXT,
+    goals TEXT,
+    emergency_contact VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

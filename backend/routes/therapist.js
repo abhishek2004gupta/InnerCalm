@@ -133,8 +133,174 @@ router.post('/schedule-meeting', async (req, res) => {
     }
 });
 
+// Get therapist profile
+router.get('/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'No token provided' });
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const therapistId = decoded.therapistId;
+    
+    const result = await db.query(
+      'SELECT therapist_id, username, email, first_name, last_name, created_at, last_login, is_active FROM therapists WHERE therapist_id = $1',
+      [therapistId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Therapist not found' });
+    }
+    
+    res.json({ therapist: result.rows[0] });
+  } catch (error) {
+    console.error('Get therapist profile error:', error);
+    res.status(500).json({ error: 'Failed to get therapist profile' });
+  }
+});
+
+// Update meeting status when link is clicked
+router.put('/meeting/:meetingId/join', async (req, res) => {
+  try {
+    const { meetingId } = req.params;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'No token provided' });
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const therapistId = decoded.therapistId;
+    
+    // Update meeting status to completed and mark therapist as busy
+    const result = await db.query(
+      `UPDATE therapist_meetings 
+       SET status = 'completed', end_time = CURRENT_TIMESTAMP 
+       WHERE meeting_id = $1 AND therapist_id = $2 
+       RETURNING *`,
+      [meetingId, therapistId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Meeting not found or not assigned to this therapist' });
+    }
+    
+    // Mark therapist as busy (not available)
+    await db.query(
+      'UPDATE therapists SET is_active = false WHERE therapist_id = $1',
+      [therapistId]
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'Meeting marked as completed',
+      meeting: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Join meeting error:', error);
+    res.status(500).json({ error: 'Failed to update meeting status' });
+  }
+});
+
+// End session and mark therapist as available
+router.put('/meeting/:meetingId/end', async (req, res) => {
+  try {
+    const { meetingId } = req.params;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'No token provided' });
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const therapistId = decoded.therapistId;
+    
+    // Mark therapist as available
+    await db.query(
+      'UPDATE therapists SET is_active = true WHERE therapist_id = $1',
+      [therapistId]
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'Therapist marked as available'
+    });
+  } catch (error) {
+    console.error('End session error:', error);
+    res.status(500).json({ error: 'Failed to end session' });
+  }
+});
+
+// Get upcoming sessions for therapist
+router.get('/sessions/upcoming', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'No token provided' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const therapistId = decoded.therapistId;
+    
+    // Fetch upcoming sessions with proper meeting_id
+    const result = await db.query(`
+      SELECT 
+        tm.meeting_id,
+        u.username,
+        s.emergency_contact,
+        CASE 
+          WHEN s.session_id IS NOT NULL THEN 'Individual'
+          WHEN c.session_id IS NOT NULL THEN 'Couples'
+          WHEN f.session_id IS NOT NULL THEN 'Family'
+        END AS therapy_type,
+        tm.start_time AS session_time,
+        u.meeting_link
+      FROM therapist_meetings tm
+      JOIN users u ON tm.user_id = u.user_id
+      LEFT JOIN individual_therapy_sessions s ON tm.meeting_id = s.session_id
+      LEFT JOIN couples_therapy_sessions c ON tm.meeting_id = c.session_id
+      LEFT JOIN family_therapy_sessions f ON tm.meeting_id = f.session_id
+      WHERE tm.therapist_id = $1 AND tm.status = 'scheduled'
+      ORDER BY tm.start_time ASC
+    `, [therapistId]);
+    
+    res.json({
+      sessions: result.rows
+    });
+  } catch (error) {
+    console.error('Therapist upcoming sessions error:', error);
+    res.status(500).json({ error: 'Failed to fetch sessions' });
+  }
+});
+
+// Get last 10 completed sessions for therapist
+router.get('/sessions/history', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'No token provided' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const therapistId = decoded.therapistId;
+    // Fetch last 10 completed sessions from all therapy tables
+    const individual = await db.query(
+      `SELECT s.session_id, u.username, s.emergency_contact, 'Individual' AS therapy_type, s.created_at AS session_time, u.meeting_link
+       FROM individual_therapy_sessions s JOIN users u ON s.user_id = u.user_id
+       WHERE s.session_id IN (SELECT meeting_id FROM therapist_meetings WHERE therapist_id = $1 AND status = 'completed')
+       ORDER BY s.created_at DESC LIMIT 10`, [therapistId]);
+    const couples = await db.query(
+      `SELECT s.session_id, u.username, s.emergency_contact, 'Couples' AS therapy_type, s.created_at AS session_time, u.meeting_link
+       FROM couples_therapy_sessions s JOIN users u ON s.user_id = u.user_id
+       WHERE s.session_id IN (SELECT meeting_id FROM therapist_meetings WHERE therapist_id = $1 AND status = 'completed')
+       ORDER BY s.created_at DESC LIMIT 10`, [therapistId]);
+    const family = await db.query(
+      `SELECT s.session_id, u.username, s.emergency_contact, 'Family' AS therapy_type, s.created_at AS session_time, u.meeting_link
+       FROM family_therapy_sessions s JOIN users u ON s.user_id = u.user_id
+       WHERE s.session_id IN (SELECT meeting_id FROM therapist_meetings WHERE therapist_id = $1 AND status = 'completed')
+       ORDER BY s.created_at DESC LIMIT 10`, [therapistId]);
+    // Merge and sort by session_time, limit to 10
+    const all = [...individual.rows, ...couples.rows, ...family.rows]
+      .sort((a, b) => new Date(b.session_time) - new Date(a.session_time))
+      .slice(0, 10);
+    res.json({
+      history: all
+    });
+  } catch (error) {
+    console.error('Therapist session history error:', error);
+    res.status(500).json({ error: 'Failed to fetch session history' });
+  }
+});
+
 // Admin: Get all users
-router.get('/../admin/users', async (req, res) => {
+router.get('/admin/users', async (req, res) => {
     try {
         const result = await db.query('SELECT user_id, username, email FROM users ORDER BY username');
         res.json({ users: result.rows });
@@ -142,8 +308,9 @@ router.get('/../admin/users', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch users' });
     }
 });
+
 // Admin: Get all therapists
-router.get('/../admin/therapists', async (req, res) => {
+router.get('/admin/therapists', async (req, res) => {
     try {
         const result = await db.query('SELECT therapist_id, username, email FROM therapists ORDER BY username');
         res.json({ therapists: result.rows });

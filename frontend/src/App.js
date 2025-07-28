@@ -19,6 +19,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './components/Profile';
 import TherapistDashboard from './components/TherapistDashboard';
 import AdminScheduleMeeting from './components/AdminScheduleMeeting';
+import TherapyConfirmation from './components/TherapyConfirmation';
 import './styles/App.css';
 
 function App() {
@@ -68,6 +69,7 @@ function App() {
             />
             <Route path="/therapist-dashboard" element={<TherapistDashboard />} />
             <Route path="/admin/schedule-meeting" element={<AdminScheduleMeeting />} />
+            <Route path="/therapy-confirmation" element={<TherapyConfirmation />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

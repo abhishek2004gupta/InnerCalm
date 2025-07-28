@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../styles/FamilyTherapy.css';
+import { useNavigate } from 'react-router-dom';
 
 const FamilyTherapy = () => {
   const [formData, setFormData] = useState({
@@ -8,12 +9,12 @@ const FamilyTherapy = () => {
     phone: '',
     familySize: '',
     childrenAges: '',
-    preferredTime: '',
     mainConcerns: '',
     goals: '',
-    emergencyContact: '',
-    insuranceInfo: ''
+    emergencyContact: ''
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -22,9 +23,25 @@ const FamilyTherapy = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) return alert('Please log in first.');
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || ''}/api/therapy/family`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, userId: user.id })
+      });
+      const data = await response.json();
+      if (data.success) {
+        navigate('/therapy-confirmation', { state: { meetingLink: data.meetingLink, sessionId: data.sessionId, type: 'Family' } });
+      } else {
+        alert(data.error || 'Failed to schedule session.');
+      }
+    } catch (err) {
+      alert('Error submitting form.');
+    }
   };
 
   return (
@@ -161,22 +178,6 @@ const FamilyTherapy = () => {
                   placeholder="e.g., 8, 12, 15"
                 />
               </div>
-
-              <div className="form-group">
-                <label htmlFor="preferredTime">Preferred Session Time *</label>
-                <select
-                  id="preferredTime"
-                  name="preferredTime"
-                  value={formData.preferredTime}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select preferred time</option>
-                  <option value="morning">Morning (9AM-12PM)</option>
-                  <option value="afternoon">Afternoon (12PM-5PM)</option>
-                  <option value="evening">Evening (5PM-8PM)</option>
-                </select>
-              </div>
             </div>
 
             <div className="form-group">
@@ -214,18 +215,6 @@ const FamilyTherapy = () => {
                   value={formData.emergencyContact}
                   onChange={handleChange}
                   placeholder="Name and phone number"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="insuranceInfo">Insurance Information</label>
-                <input
-                  type="text"
-                  id="insuranceInfo"
-                  name="insuranceInfo"
-                  value={formData.insuranceInfo}
-                  onChange={handleChange}
-                  placeholder="Insurance provider and policy number"
                 />
               </div>
             </div>

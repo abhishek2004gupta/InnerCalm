@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { voiceService } from '../services/voiceService';
+import { createChatSession, endChatSession, saveChatSummary } from '../services/chatService';
 import ConversationPopup from './ConversationPopup';
 import '../styles/Chatbot.css';
 
@@ -23,6 +24,8 @@ const Chatbot = () => {
   const [chatSummary, setChatSummary] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isConversationOpen, setIsConversationOpen] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+
   const messagesEndRef = useRef(null);
   const chatMessagesRef = useRef(null);
   const navigate = useNavigate();
@@ -33,6 +36,23 @@ const Chatbot = () => {
     }
   };
 
+  // Create chat session when component mounts
+  useEffect(() => {
+    const initializeChatSession = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const newSessionId = await createChatSession();
+          setSessionId(newSessionId);
+        }
+      } catch (error) {
+        console.error('Failed to create chat session:', error);
+      }
+    };
+
+    initializeChatSession();
+  }, []);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
@@ -40,6 +60,8 @@ const Chatbot = () => {
   useEffect(() => {
     localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
   }, [messages]);
+
+
 
   const handleSend = async (e) => {
     if (e) e.preventDefault();
@@ -114,17 +136,52 @@ const Chatbot = () => {
       alert('Please have a conversation before ending the chat.');
       return;
     }
-    const chatData = {
-      messages,
-      summary: { status: 'pending' }
-    };
-    localStorage.setItem('chatSummary', JSON.stringify(chatData));
-    navigate('/chat-summary');
+
+    try {
+      // End chat session in database
+      if (sessionId) {
+        await endChatSession(sessionId);
+      }
+
+      const chatData = {
+        messages,
+        sessionId,
+        summary: { status: 'pending' }
+      };
+      localStorage.setItem('chatSummary', JSON.stringify(chatData));
+      navigate('/chat-summary');
+    } catch (error) {
+      console.error('Failed to end chat session:', error);
+      // Still navigate to summary even if database operation fails
+      const chatData = {
+        messages,
+        sessionId,
+        summary: { status: 'pending' }
+      };
+      localStorage.setItem('chatSummary', JSON.stringify(chatData));
+      navigate('/chat-summary');
+    }
   };
 
-  const handleNewChat = () => {
+  const handleNewChat = async () => {
     if (messages.length > 1) {
       if (window.confirm('Are you sure you want to start a new chat? The current conversation will be cleared.')) {
+        try {
+          // End current session if exists
+          if (sessionId) {
+            await endChatSession(sessionId);
+          }
+          
+          // Create new session
+          const token = localStorage.getItem('token');
+          if (token) {
+            const newSessionId = await createChatSession();
+            setSessionId(newSessionId);
+          }
+        } catch (error) {
+          console.error('Failed to start new chat:', error);
+        }
+        
         setMessages([{
           text: "Hello! I'm your AI Mental Health Assistant. How can I help you today?",
           sender: 'bot',
